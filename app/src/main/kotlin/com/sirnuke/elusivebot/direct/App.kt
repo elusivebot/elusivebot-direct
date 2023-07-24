@@ -13,11 +13,10 @@ fun main(args: Array<String>) {
         .from.env()
 
     runBlocking {
-
-        // TODO: Open connection to Redis here
+        // TODO: Open connection to Redis and RabbitMQ here
 
         val selectorManager = SelectorManager(Dispatchers.IO)
-        val serverSocket = aSocket(selectorManager).tcp().bind(config[DirectSpec.listenHost], config[DirectSpec.listenPort])
+        val serverSocket = aSocket(selectorManager).tcp().bind(config[DirectSpec.Listen.host], config[DirectSpec.Listen.port])
         L.info("Listening on {}", serverSocket.localAddress)
 
         while (true) {
