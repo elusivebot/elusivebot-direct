@@ -13,7 +13,7 @@ object DirectSpec : ConfigSpec("direct") {
         val port by required<Int>()
     }
 
-    object RabbitMQ : ConfigSpec() {
+    object RabbitMq : ConfigSpec() {
         val host by required<String>()
         val port by required<Int>()
     }

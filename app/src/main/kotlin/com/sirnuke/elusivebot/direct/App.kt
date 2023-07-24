@@ -1,14 +1,23 @@
+/**
+ * Entry point for Direct service (main function).
+ */
+
 package com.sirnuke.elusivebot.direct
 
 import com.uchuhimo.konf.Config
-import io.ktor.network.selector.*
-import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.*
+import io.ktor.network.selector.SelectorManager
+import io.ktor.network.sockets.aSocket
+import io.ktor.network.sockets.openReadChannel
+import io.ktor.network.sockets.openWriteChannel
+import io.ktor.utils.io.readUTF8Line
 import org.slf4j.LoggerFactory
 
-fun main(args: Array<String>) {
-    val L = LoggerFactory.getLogger("com.sirnuke.elusivebot.direct")
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    val log = LoggerFactory.getLogger("com.sirnuke.elusivebot.direct")
     val config = Config { addSpec(DirectSpec) }
         .from.env()
 
@@ -16,12 +25,13 @@ fun main(args: Array<String>) {
         // TODO: Open connection to Redis and RabbitMQ here
 
         val selectorManager = SelectorManager(Dispatchers.IO)
-        val serverSocket = aSocket(selectorManager).tcp().bind(config[DirectSpec.Listen.host], config[DirectSpec.Listen.port])
-        L.info("Listening on {}", serverSocket.localAddress)
+        val serverSocket = aSocket(selectorManager).tcp().bind(config[DirectSpec.Listen.host],
+            config[DirectSpec.Listen.port])
+        log.info("Listening on {}", serverSocket.localAddress)
 
         while (true) {
             val socket = serverSocket.accept()
-            L.info("Accepted new socket {}", socket)
+            log.info("Accepted new socket {}", socket)
             // TODO: Create support structure in Redis
             // TODO: Open listeners for new messages in different scope
             // TODO: Spin this out into a separate class?
