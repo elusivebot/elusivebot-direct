@@ -8,6 +8,9 @@ repositories {
 }
 
 dependencies {
+    implementation("org.slf4j:slf4j-simple:2.0.7")
+    implementation("com.uchuhimo:konf:1.1.2")
+    implementation("io.ktor:ktor-network:2.3.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.1")
 }
