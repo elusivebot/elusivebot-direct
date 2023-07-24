@@ -40,11 +40,15 @@ fun main() {
                 val sendChannel = socket.openWriteChannel(autoFlush = true)
                 try {
                     while (true) {
-                        val message = receiveChannel.readUTF8Line()
-                        // TODO: Send to Redis
+                        val message = receiveChannel.readUTF8Line() ?: break
+                        log.info("Received '{}'", message)
+                        // TODO: Send to RabbitMQ
                     }
                 } catch (e: Throwable) {
-                    // TODO: Clean up Redis, shut it ALL DOWN
+                    log.warn("Received error on {}", socket, e)
+                } finally {
+                    // TODO: Clean up Redis/RabbitMQ, shut it ALL DOWN
+                    log.info("Shutting down {}", socket)
                     socket.close()
                 }
             }
