@@ -22,7 +22,7 @@ fun main() {
         .from.env()
 
     runBlocking {
-        // TODO: Open connection to Redis and RabbitMQ here
+        // TODO: Open connection to Kafka here
 
         val selectorManager = SelectorManager(Dispatchers.IO)
         val serverSocket = aSocket(selectorManager).tcp().bind(config[DirectSpec.Listen.host],

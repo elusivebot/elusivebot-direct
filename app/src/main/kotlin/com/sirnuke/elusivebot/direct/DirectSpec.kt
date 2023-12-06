@@ -8,12 +8,7 @@ object DirectSpec : ConfigSpec("direct") {
         val port by required<Int>()
     }
 
-    object Redis : ConfigSpec() {
-        val host by required<String>()
-        val port by required<Int>()
-    }
-
-    object RabbitMq : ConfigSpec() {
+    object Kafka : ConfigSpec() {
         val host by required<String>()
         val port by required<Int>()
     }
