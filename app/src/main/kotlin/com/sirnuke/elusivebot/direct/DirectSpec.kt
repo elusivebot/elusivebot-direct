@@ -8,8 +8,11 @@ object DirectSpec : ConfigSpec("direct") {
         val port by required<Int>()
     }
 
+    val serviceId by optional("Direct")
+
     object Kafka : ConfigSpec() {
-        val host by required<String>()
-        val port by required<Int>()
+        val bootstrap by required<String>()
+        val producerChannel by optional("tcp-input")
+        val consumerChannel by optional("tcp-output")
     }
 }
