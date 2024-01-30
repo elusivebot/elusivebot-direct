@@ -32,6 +32,7 @@ dependencies {
     implementation("org.apache.kafka:kafka-client:$kafkaApiVersion")
 
     implementation("com.sirnuke.elusivebot:elusivebot-schema:0.1.0-SNAPSHOT")
+    implementation("com.sirnuke.elusivebot:elusivebot-common:0.1.0-SNAPSHOT")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.1")

@@ -1,5 +1,6 @@
 package com.sirnuke.elusivebot.direct
 
+import com.sirnuke.elusivebot.common.logger
 import com.sirnuke.elusivebot.schema.common.Header
 import com.sirnuke.elusivebot.schema.messages.ChatMessage
 import com.uchuhimo.konf.Config
@@ -14,14 +15,18 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.slf4j.LoggerFactory
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
 class Instance(
     private val config: Config, private val socket: Socket, private val producer: KafkaProducer<String, String>
 ) {
-    private val log = LoggerFactory.getLogger("com.sirnuke.elusivebot.direct.Instance")
+    companion object {
+        val L by logger()
+    }
+
     private val receiveChannel: ByteReadChannel = socket.openReadChannel()
     private val sendChannel: ByteWriteChannel = socket.openWriteChannel(autoFlush = true)
     private val running = AtomicBoolean(true)
@@ -32,24 +37,29 @@ class Instance(
             try {
                 while (running.get()) {
                     val content = receiveChannel.readUTF8Line() ?: break
-                    log.info("Received '{}'", content)
+                    L.info("Received '{}'", content)
                     val message = ChatMessage(
                         header = Header(serviceId = config[DirectSpec.serviceId], serverId = id), message = content
                     )
-                    // TODO: Convert to JSON please
-                    producer.send(ProducerRecord(config[DirectSpec.Kafka.producerChannel], 1, id, message.toString()))
+                    producer.send(
+                        ProducerRecord(
+                            config[DirectSpec.Kafka.producerChannel],
+                            1,
+                            id,
+                            Json.encodeToString(message)
+                        )
+                    )
                 }
             } catch (e: Throwable) {
-                log.warn("Received error on {}", socket, e)
+                L.warn("Received error on {}", socket, e)
             } finally {
                 socket.close()
             }
         }
     }
 
-    suspend fun onReceive(message: String) {
-        // TODO: Stub!
-        sendChannel.writeStringUtf8(message)
+    suspend fun onReceive(message: ChatMessage) {
+        sendChannel.writeStringUtf8(message.message)
     }
 
     fun stop() {

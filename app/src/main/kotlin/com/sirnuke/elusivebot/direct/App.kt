@@ -10,6 +10,7 @@ import io.ktor.network.sockets.aSocket
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -69,7 +70,7 @@ fun main() {
         launch {
             consumer.foreach { key, message ->
                 // TODO: Actually the right way to do this?
-                this.launch { instances[key]?.onReceive(message) }
+                this.launch { instances[key]?.onReceive(Json.decodeFromString(message)) }
             }
         }
         while (running.get()) {
