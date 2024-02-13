@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
-fun main() {
+fun main() = runBlocking {
     val log = LoggerFactory.getLogger("com.sirnuke.elusivebot.direct.AppKt")
     val config = Config { addSpec(DirectSpec) }.from.env()
 
@@ -42,7 +42,13 @@ fun main() {
 
     val consumer = builder.stream<String, String>(config[DirectSpec.Kafka.consumerChannel])
 
+    consumer.foreach { key, message ->
+        log.info("Got response {} {}", key, message)
+        this.launch { instances[key]?.onReceive(Json.decodeFromString(message)) }
+    }
+
     val streams = KafkaStreams(builder.build(), consumerConfig)
+    streams.start()
 
     val producerConfig = mapOf(
         "bootstrap.servers" to config[DirectSpec.Kafka.bootstrap],
@@ -67,19 +73,11 @@ fun main() {
         // TODO: Close individual instances?
     })
 
-    runBlocking {
-        launch {
-            consumer.foreach { key, message ->
-                // TODO: Actually the right way to do this?
-                this.launch { instances[key]?.onReceive(Json.decodeFromString(message)) }
-            }
-        }
-        while (running.get()) {
-            val socket = serverSocket.accept()
-            val instance = Instance(config, socket, producer)
-            log.info("Accepted new socket {}", socket)
-            instances[instance.id] = instance
-            instance.start()
-        }
+    while (running.get()) {
+        val socket = serverSocket.accept()
+        val instance = Instance(config, socket, producer)
+        log.info("Accepted new socket {}", socket)
+        instances[instance.id] = instance
+        instance.start()
     }
 }
