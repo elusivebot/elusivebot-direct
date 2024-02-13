@@ -19,6 +19,8 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
+import org.apache.kafka.clients.producer.RecordMetadata
+import java.lang.Exception
 
 class Instance(
     private val config: Config, private val socket: Socket, private val producer: KafkaProducer<String, String>
@@ -43,12 +45,14 @@ class Instance(
                     )
                     producer.send(
                         ProducerRecord(
-                            config[DirectSpec.Kafka.producerChannel],
-                            1,
-                            id,
-                            Json.encodeToString(message)
+                            config[DirectSpec.Kafka.producerChannel], id, Json.encodeToString(message)
                         )
-                    )
+                    ) { _: RecordMetadata?, e: Exception? ->
+                        if (e != null)
+                            L.error("Unable to send response on {}", socket, e)
+                        else
+                            L.info("Done sending response on {}", socket)
+                    }
                 }
             } catch (e: Throwable) {
                 L.warn("Received error on {}", socket, e)

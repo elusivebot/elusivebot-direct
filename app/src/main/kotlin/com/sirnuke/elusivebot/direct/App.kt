@@ -31,6 +31,7 @@ fun main() {
 
     val consumerConfig = StreamsConfig(
         mapOf<String, Any>(
+            StreamsConfig.APPLICATION_ID_CONFIG to config[DirectSpec.serviceId],
             StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to config[DirectSpec.Kafka.bootstrap],
             StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to Serdes.String().javaClass.name,
             StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to Serdes.String().javaClass.name
@@ -57,7 +58,7 @@ fun main() {
     )
     log.info("Listening on {}", serverSocket.localAddress)
 
-    Runtime.getRuntime().addShutdownHook(thread(name = "shutdown-hook") {
+    Runtime.getRuntime().addShutdownHook(thread(start = false, name = "shutdown-hook") {
         running.set(false)
         serverSocket.close()
         selectorManager.close()

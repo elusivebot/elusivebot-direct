@@ -29,7 +29,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("io.ktor:ktor-network:2.3.2")
     implementation("org.apache.kafka:kafka-streams:$kafkaApiVersion")
-    implementation("org.apache.kafka:kafka-client:$kafkaApiVersion")
+    implementation("org.apache.kafka:kafka-clients:$kafkaApiVersion")
 
     implementation("com.sirnuke.elusivebot:elusivebot-schema:0.1.0-SNAPSHOT")
     implementation("com.sirnuke.elusivebot:elusivebot-common:0.1.0-SNAPSHOT")
