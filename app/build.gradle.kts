@@ -1,6 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.10"
-    id("com.diffplug.spotless") version "6.20.0"
+    id("com.diffplug.spotless") version "6.25.0"
     application
 }
 
@@ -23,7 +23,7 @@ group = "com.sirnuke.elusivebot"
 val kafkaApiVersion = "3.6.1"
 
 dependencies {
-    implementation("org.slf4j:slf4j-simple:2.0.7")
+    implementation("org.slf4j:slf4j-simple:2.0.12")
     implementation("com.uchuhimo:konf:1.1.2")
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.8.0.202311291450-r")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")

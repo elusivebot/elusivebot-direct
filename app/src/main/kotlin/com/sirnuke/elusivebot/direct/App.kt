@@ -7,27 +7,31 @@ package com.sirnuke.elusivebot.direct
 import com.uchuhimo.konf.Config
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.StreamsConfig
+import org.apache.kafka.streams.kstream.KStream
 import org.slf4j.LoggerFactory
+
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.thread
 
+import kotlin.concurrent.thread
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+
+@Suppress("TOO_LONG_FUNCTION")
 fun main() = runBlocking {
     val log = LoggerFactory.getLogger("com.sirnuke.elusivebot.direct.AppKt")
     val config = Config { addSpec(DirectSpec) }.from.env()
 
     val running = AtomicBoolean(true)
 
-    val instances = ConcurrentHashMap<String, Instance>()
+    val instances: ConcurrentHashMap<String, Instance> = ConcurrentHashMap()
 
     val consumerConfig = StreamsConfig(
         mapOf<String, Any>(
@@ -40,7 +44,7 @@ fun main() = runBlocking {
 
     val builder = StreamsBuilder()
 
-    val consumer = builder.stream<String, String>(config[DirectSpec.Kafka.consumerChannel])
+    val consumer: KStream<String, String> = builder.stream(config[DirectSpec.Kafka.consumerChannel])
 
     consumer.foreach { key, message ->
         log.info("Got response {} {}", key, message)
@@ -56,7 +60,7 @@ fun main() = runBlocking {
         "value.serializer" to "org.apache.kafka.common.serialization.StringSerializer"
     )
 
-    val producer = KafkaProducer<String, String>(producerConfig)
+    val producer: KafkaProducer<String, String> = KafkaProducer(producerConfig)
 
     val selectorManager = SelectorManager(Dispatchers.IO)
     val serverSocket = aSocket(selectorManager).tcp().bind(
