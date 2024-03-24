@@ -3,4 +3,4 @@
 set -ex
 ./gradlew distZip
 
-docker build -t elusivebot-direct:latest .
+sudo docker build -t elusivebot/direct:latest .
