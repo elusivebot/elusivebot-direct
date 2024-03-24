@@ -31,6 +31,9 @@ fun main() = runBlocking {
 
     val running = AtomicBoolean(true)
 
+    log.info("Starting Direct service with producer {} & consumer {}", config[DirectSpec.Kafka.producerTopic],
+        config[DirectSpec.Kafka.consumerTopic])
+
     val instances: ConcurrentHashMap<String, Instance> = ConcurrentHashMap()
 
     val consumerConfig = StreamsConfig(
@@ -44,7 +47,7 @@ fun main() = runBlocking {
 
     val builder = StreamsBuilder()
 
-    val consumer: KStream<String, String> = builder.stream(config[DirectSpec.Kafka.consumerChannel])
+    val consumer: KStream<String, String> = builder.stream(config[DirectSpec.Kafka.consumerTopic])
 
     consumer.foreach { key, message ->
         log.info("Got response {} {}", key, message)
