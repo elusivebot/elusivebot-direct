@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -ex
+
+sudo docker push docker.degrendel.com/elusivebot/direct:latest
