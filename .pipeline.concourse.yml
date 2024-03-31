@@ -1,0 +1,81 @@
+jobs:
+- name: elusivebot-direct
+  plan:
+  - get: elusivebot-direct-git
+    trigger: true
+  - task: build-jar
+    config:
+      platform: linux
+      caches:
+      - path: $HOME/.m2/repository
+      - path: $HOME/.gradle/caches/
+      - path: $HOME/.gradle/wrapper/
+      inputs:
+      - name: elusivebot-direct-git
+      outputs:
+      - name: elusivebot-direct-jar
+      image_resource:
+        name: eclipse-temurin-17-jdk
+        type: registry-image
+        source:
+          repository: eclipse-temurin
+          tag: 17-jdk
+      run:
+        path: bash
+        args: 
+        - -c
+        - |
+          set -e
+          mkdir -p $HOME/.gradle
+          touch $HOME/.gradle/gradle.properties
+          chmod 600 $HOME/.gradle/gradle.properties
+          echo "internalMavenUrl=((maven.url))" > $HOME/.gradle/gradle.properties
+          echo "internalMavenUsername=((maven.username))" >> $HOME/.gradle/gradle.properties
+          echo "internalMavenPassword=((maven.password))" >> $HOME/.gradle/gradle.properties
+          set -x
+          cd elusivebot-direct-git
+          ./gradlew distZip
+          cp Dockerfile ../elusivebot-direct-jar/
+          cp app/build/distributions/app*.zip ../elusivebot-direct-jar/app.zip
+  - task: build-image
+    privileged: true
+    config:
+      platform: linux
+      caches:
+      - path: cache
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: elusivebot-direct-jar
+      outputs:
+      - name: image
+      params:
+        CONTEXT: elusivebot-direct-jar
+        BUILD_ARG_base_filename: app
+        BUILD_ARG_jar_path: .
+      run:
+        path: build
+  - put: elusivebot-direct-image
+    params:
+      image: image/image.tar
+
+
+resources:
+- name: elusivebot-direct-git
+  type: git
+  icon: github
+  source:
+    uri: https://github.com/elusivebot/elusivebot-direct.git
+    username: ((github.username))
+    password: ((github.password))
+- name: elusivebot-direct-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: ((docker.host))/elusivebot/direct
+    username: ((docker.username))
+    password: ((docker.password))
+    tag: latest
+
