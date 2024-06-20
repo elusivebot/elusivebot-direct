@@ -1,8 +1,8 @@
 package com.sirnuke.elusivebot.direct
 
 import com.sirnuke.elusivebot.common.logger
-import com.sirnuke.elusivebot.schema.common.Header
-import com.sirnuke.elusivebot.schema.messages.ChatMessage
+import com.sirnuke.elusivebot.schema.ChatMessage
+import com.sirnuke.elusivebot.schema.Header
 import com.uchuhimo.konf.Config
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.openReadChannel
