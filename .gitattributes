@@ -8,3 +8,5 @@
 *.bat           text eol=crlf
 
 bin/**			text eol=lf
+
+*.kt			text eol=lf
