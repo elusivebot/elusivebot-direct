@@ -59,7 +59,9 @@ class Instance(
                     )
                     producer.send(
                         ProducerRecord(
-                            config[DirectSpec.Kafka.producerTopic], id, Json.encodeToString(message)
+                            config[DirectSpec.Kafka.producerTopic], config[DirectSpec.serviceId], Json.encodeToString(
+                                message
+                            )
                         )
                     ) { _: RecordMetadata?, ex: Exception? ->
                         ex?.let {

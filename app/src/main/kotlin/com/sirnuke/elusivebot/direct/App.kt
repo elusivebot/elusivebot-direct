@@ -4,6 +4,7 @@
 
 package com.sirnuke.elusivebot.direct
 
+import com.sirnuke.elusivebot.schema.ChatMessage
 import com.uchuhimo.konf.Config
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
@@ -31,8 +32,10 @@ fun main() = runBlocking {
 
     val running = AtomicBoolean(true)
 
-    log.info("Starting Direct service with producer {} & consumer {}", config[DirectSpec.Kafka.producerTopic],
-        config[DirectSpec.Kafka.consumerTopic])
+    log.info(
+        "Starting Direct service with producer {} & consumer {}", config[DirectSpec.Kafka.producerTopic],
+        config[DirectSpec.Kafka.consumerTopic]
+    )
 
     val instances: ConcurrentHashMap<String, Instance> = ConcurrentHashMap()
 
@@ -49,9 +52,10 @@ fun main() = runBlocking {
 
     val consumer: KStream<String, String> = builder.stream(config[DirectSpec.Kafka.consumerTopic])
 
-    consumer.foreach { key, message ->
+    consumer.filter { key, _ -> key == config[DirectSpec.serviceId] }.foreach { key, message ->
         log.info("Got response {} {}", key, message)
-        this.launch { instances[key]?.onReceive(Json.decodeFromString(message)) }
+        val msg = Json.decodeFromString<ChatMessage>(message)
+        this.launch { instances[msg.header.serverId]?.onReceive(msg) }
     }
 
     val streams = KafkaStreams(builder.build(), consumerConfig)
