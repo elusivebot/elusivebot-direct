@@ -11,7 +11,7 @@ object DirectSpec : ConfigSpec("direct") {
 
     object Kafka : ConfigSpec() {
         val bootstrap by required<String>()
-        val producerTopic by optional("tcp-input")
-        val consumerTopic by optional("tcp-output")
+        val producerTopic by optional("messages-input")
+        val consumerTopic by optional("messages-output")
     }
 }

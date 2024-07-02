@@ -54,7 +54,7 @@ fun main() = runBlocking {
 
     consumer.filter { key, _ -> key == config[DirectSpec.serviceId] }.foreach { key, message ->
         log.info("Got response {} {}", key, message)
-        val msg = Json.decodeFromString<ChatMessage>(message)
+        val msg: ChatMessage = Json.decodeFromString(message)
         this.launch { instances[msg.header.serverId]?.onReceive(msg) }
     }
 
