@@ -34,3 +34,4 @@ venv
 # Misc
 .DS_Store
 .*.sw*
+._*
