@@ -1,5 +1,6 @@
 package com.sirnuke.elusivebot.direct
 
+import com.sirnuke.elusivebot.common.Kafka
 import com.sirnuke.elusivebot.common.logger
 import com.sirnuke.elusivebot.schema.ChatMessage
 import com.sirnuke.elusivebot.schema.Header
@@ -11,11 +12,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.readUTF8Line
 import io.ktor.utils.io.writeStringUtf8
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
 
-import java.lang.Exception
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -27,12 +24,12 @@ import kotlinx.serialization.json.Json
 /**
  * @param config
  * @param socket
- * @param producer
+ * @param kafka
  */
 class Instance(
     private val config: Config,
     private val socket: Socket,
-    private val producer: KafkaProducer<String, String>
+    private val kafka: Kafka,
 ) {
     private val receiveChannel: ByteReadChannel = socket.openReadChannel()
     private val sendChannel: ByteWriteChannel = socket.openWriteChannel(autoFlush = true)
@@ -57,13 +54,11 @@ class Instance(
                     val message = ChatMessage(
                         header = Header(serviceId = config[DirectSpec.serviceId], serverId = id), message = content
                     )
-                    producer.send(
-                        ProducerRecord(
-                            config[DirectSpec.Kafka.producerTopic], config[DirectSpec.serviceId], Json.encodeToString(
-                                message
-                            )
-                        )
-                    ) { _: RecordMetadata?, ex: Exception? ->
+                    kafka.send(
+                        topic = config[DirectSpec.Kafka.producerTopic],
+                        key = config[DirectSpec.serviceId],
+                        message = Json.encodeToString(message),
+                    ) { _, ex ->
                         ex?.let {
                             log.error("Unable to send response on {}", socket, ex)
                         } ?: log.info("Done sending response on {}", socket)
@@ -93,6 +88,7 @@ class Instance(
         // TODO: Will want some ability to interrupt the socket
         running.set(false)
     }
+
     companion object {
         val log by logger()
     }

@@ -4,16 +4,11 @@
 
 package com.sirnuke.elusivebot.direct
 
+import com.sirnuke.elusivebot.common.Kafka
 import com.sirnuke.elusivebot.schema.ChatMessage
 import com.uchuhimo.konf.Config
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.common.serialization.Serdes
-import org.apache.kafka.streams.KafkaStreams
-import org.apache.kafka.streams.StreamsBuilder
-import org.apache.kafka.streams.StreamsConfig
-import org.apache.kafka.streams.kstream.KStream
 import org.slf4j.LoggerFactory
 
 import java.util.concurrent.ConcurrentHashMap
@@ -21,9 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import kotlin.concurrent.thread
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 
 @Suppress("TOO_LONG_FUNCTION")
 fun main() = runBlocking {
@@ -39,35 +32,14 @@ fun main() = runBlocking {
 
     val instances: ConcurrentHashMap<String, Instance> = ConcurrentHashMap()
 
-    val consumerConfig = StreamsConfig(
-        mapOf<String, Any>(
-            StreamsConfig.APPLICATION_ID_CONFIG to config[DirectSpec.serviceId],
-            StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to config[DirectSpec.Kafka.bootstrap],
-            StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to Serdes.String().javaClass.name,
-            StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to Serdes.String().javaClass.name
-        )
-    )
-
-    val builder = StreamsBuilder()
-
-    val consumer: KStream<String, String> = builder.stream(config[DirectSpec.Kafka.consumerTopic])
-
-    consumer.filter { key, _ -> key == config[DirectSpec.serviceId] }.foreach { key, message ->
-        log.info("Got response {} {}", key, message)
-        val msg: ChatMessage = Json.decodeFromString(message)
-        this.launch { instances[msg.header.serverId]?.onReceive(msg) }
-    }
-
-    val streams = KafkaStreams(builder.build(), consumerConfig)
-    streams.start()
-
-    val producerConfig = mapOf(
-        "bootstrap.servers" to config[DirectSpec.Kafka.bootstrap],
-        "key.serializer" to "org.apache.kafka.common.serialization.StringSerializer",
-        "value.serializer" to "org.apache.kafka.common.serialization.StringSerializer"
-    )
-
-    val producer: KafkaProducer<String, String> = KafkaProducer(producerConfig)
+    val kafka = Kafka.Builder(
+        applicationId = config[DirectSpec.serviceId],
+        bootstrap = config[DirectSpec.Kafka.bootstrap],
+        scope = this,
+    ).registerConsumer(config[DirectSpec.Kafka.consumerTopic]) { key, msg: ChatMessage ->
+        log.info("Got response {} {}", key, msg)
+        instances[msg.header.serverId]?.onReceive(msg)
+    }.construct()
 
     val selectorManager = SelectorManager(Dispatchers.IO)
     val serverSocket = aSocket(selectorManager).tcp().bind(
@@ -79,14 +51,13 @@ fun main() = runBlocking {
         running.set(false)
         serverSocket.close()
         selectorManager.close()
-        streams.close()
-        producer.close()
+        kafka.close()
         // TODO: Close individual instances?
     })
 
     while (running.get()) {
         val socket = serverSocket.accept()
-        val instance = Instance(config, socket, producer)
+        val instance = Instance(config, socket, kafka)
         log.info("Accepted new socket {}", socket)
         instances[instance.id] = instance
         instance.start()
