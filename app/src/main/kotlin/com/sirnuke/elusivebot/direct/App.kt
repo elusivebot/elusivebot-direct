@@ -36,10 +36,10 @@ fun main() = runBlocking {
         applicationId = config[DirectSpec.serviceId],
         bootstrap = config[DirectSpec.Kafka.bootstrap],
         scope = this,
-    ).registerConsumer(config[DirectSpec.Kafka.consumerTopic]) { key, msg: ChatMessage ->
+    ).registerConsumer(config[DirectSpec.Kafka.consumerTopic]) { _, key, msg: ChatMessage ->
         log.info("Got response {} {}", key, msg)
         instances[msg.header.serverId]?.onReceive(msg)
-    }.construct()
+    }.build()
 
     val selectorManager = SelectorManager(Dispatchers.IO)
     val serverSocket = aSocket(selectorManager).tcp().bind(
