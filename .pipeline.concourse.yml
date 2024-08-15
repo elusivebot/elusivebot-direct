@@ -58,6 +58,7 @@ jobs:
       run:
         path: build
   - put: elusivebot-direct-image
+    no_get: true
     params:
       image: image/image.tar
 
